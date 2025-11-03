@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Property Installment Calculator</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #f6f8fa;
+      margin: 40px;
+      color: #333;
+    }
+    h1 {
+      text-align: center;
+    }
+    .calculator {
+      background: white;
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 25px;
+      border-radius: 15px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    label {
+      display: block;
+      margin-top: 15px;
+      font-weight: 500;
+    }
+    input {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      font-size: 1em;
+    }
+    button {
+      margin-top: 20px;
+      width: 100%;
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      background: #0077ff;
+      color: white;
+      font-size: 1em;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #005fcc;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 25px;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 10px;
+      text-align: center;
+    }
+    th {
+      background-color: #0077ff;
+      color: white;
+    }
+    .export-buttons {
+      display: flex;
+      gap: 10px;
+      margin-top: 15px;
+    }
+  </style>
+</head>
+<body>
+  <h1>🏡 Plan De Pago Ismael Rosario</h1>
+  <div class="calculator">
+    <label>Precio Total De La Propiedad (USD):</label>
+    <input required type="number" id="totalPrice" placeholder="Ejemplo 150000" />
+
+    <label>Monto De Reserva (USD):</label>
+    <input required type="number" id="downPayment" placeholder="Ejemplo: 30000" />
+
+    <label>Firma De Contrato (%):</label>
+    <input required type="number" id="contractPercent" placeholder="Insertar monto a pagar cuando firme contrato Ejemplo: 10" />
+
+    <label>Fecha De Inicio:</label>
+    <input required type="date" id="startDate" />
+
+    <label>Fecha De Entrega</label>
+    <input  required type="date" id="turnkeyDate" />
+
+    <button onclick="calculate()">Calcular</button>
+
+    <div id="results"></div>
+  </div>
+
+  <script>
+    // Set today's date as default start date
+    document.addEventListener('DOMContentLoaded', () => {
+      const today = new Date().toISOString().split('T')[0];
+      document.getElementById('startDate').value = today;
+    });
+
+    function calculate() {
+      const total = parseFloat(document.getElementById('totalPrice').value);
+      const down = parseFloat(document.getElementById('downPayment').value);
+      const contractPercent = parseFloat(document.getElementById('contractPercent').value);
+      const turnkeyDate = new Date(document.getElementById('turnkeyDate').value);
+      const startDate = new Date(document.getElementById('startDate').value);
+
+      if (!total || !down || !contractPercent || !turnkeyDate || !startDate) {
+        alert('Porfavor completar todos los campos.');
+        return;
+      }
+
+      const contractPayment = (total * contractPercent) / 100;
+      const balance = total - down - contractPayment;
+
+      // Calculate months between start and turnkey dates
+      const months = (turnkeyDate.getFullYear() - startDate.getFullYear()) * 12 +
+                     (turnkeyDate.getMonth() - startDate.getMonth());
+      const monthlyPayment = months > 0 ? balance / months : balance;
+
+      // Build results and table
+      let html = `
+        <h3>Resultados</h3>
+        <p><strong>Pago Al Firmar Contrato:</strong> $${contractPayment.toFixed(2)}</p>
+        <p><strong>Balance Restante:</strong> $${balance.toFixed(2)}</p>
+        <p><strong>Mensualidad</strong> $${monthlyPayment.toFixed(2)} (${months} Meses)</p>
+        <h4>Plan De Pago</h4>
+        <table id="scheduleTable">
+          <tr><th>#</th><th>Fecha De Pago</th><th>Cantidad (USD)</th></tr>
+      `;
+
+      for (let i = 1; i <= months; i++) {
+        const date = new Date(startDate);
+        date.setMonth(startDate.getMonth() + i);
+        html += `<tr><td>${i}</td><td>${date.toLocaleDateString()}</td><td>$${monthlyPayment.toFixed(2)}</td></tr>`;
+      }
+
+      html += `</table>
+      <div class="export-buttons">
+        <button onclick="exportPDF()">Exportar PDF</button>
+        <button onclick="exportExcel()">Exportar Excel</button>
+      </div>`;
+
+      document.getElementById('results').innerHTML = html;
+    }
+
+    async function exportPDF() {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      doc.text('Property Payment Schedule', 10, 10);
+
+      const rows = [['#', 'Due Date', 'Amount (USD)']];
+      const table = document.querySelectorAll('#scheduleTable tr');
+      table.forEach((tr, index) => {
+        if (index > 0) {
+          const cells = tr.querySelectorAll('td');
+          rows.push([cells[0].innerText, cells[1].innerText, cells[2].innerText]);
+        }
+      });
+
+      let y = 20;
+      rows.forEach(row => {
+        doc.text(row.join('  |  '), 10, y);
+        y += 8;
+      });
+
+      doc.save('payment_schedule.pdf');
+    }
+
+    function exportExcel() {
+      const wb = XLSX.utils.book_new();
+      const table = document.getElementById('scheduleTable');
+      const ws = XLSX.utils.table_to_sheet(table);
+      XLSX.utils.book_append_sheet(wb, ws, 'Schedule');
+      XLSX.writeFile(wb, 'payment_schedule.xlsx');
+    }
+  </script>
+</body>
+</html>
