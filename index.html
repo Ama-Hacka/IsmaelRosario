@@ -10,19 +10,44 @@
     body {
       font-family: 'Inter', sans-serif;
       background: #f6f8fa;
-      margin: 40px;
+      margin: 0;
+      padding: 0;
       color: #333;
+    }
+    header {
+      width: 100%;
+      margin: 0;
+      padding: 0;
+      line-height: 0;
+    }
+    header img {
+      width: 100%;
+      height: auto;
+      display: block;
+      object-fit: cover;
     }
     h1 {
       text-align: center;
+      margin: 40px 0 20px 0;
+      padding: 0 20px;
     }
     .calculator {
       background: white;
       max-width: 600px;
-      margin: 0 auto;
+      margin: 0 auto 40px auto;
       padding: 25px;
       border-radius: 15px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    @media (max-width: 768px) {
+      .calculator {
+        margin: 0 20px 40px 20px;
+        padding: 20px;
+      }
+      h1 {
+        font-size: 1.5em;
+        margin: 20px 0 15px 0;
+      }
     }
     label {
       display: block;
@@ -36,6 +61,16 @@
       border-radius: 8px;
       border: 1px solid #ccc;
       font-size: 1em;
+    }
+    select {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      font-size: 1em;
+      background-color: white;
+      cursor: pointer;
     }
     button {
       margin-top: 20px;
@@ -72,17 +107,52 @@
     }
   </style>
 </head>
+<header>
+  <img src="./Ismabanner.jpg" alt="">
+</header>
 <body>
-  <h1>🏡 Plan De Pago Ismael Rosario</h1>
+  <h1>Esquema De Inversion 🏡 </h1>
   <div class="calculator">
+    <label>Nombre Del Cliente:</label>
+    <input required type="text" id="clientName" placeholder="Ejemplo: Juan Pérez" />
+
     <label>Precio Total De La Propiedad (USD):</label>
     <input required type="number" id="totalPrice" placeholder="Ejemplo 150000" />
 
     <label>Monto De Reserva (USD):</label>
     <input required type="number" id="downPayment" placeholder="Ejemplo: 30000" />
 
-    <label>Firma De Contrato (%):</label>
-    <input required type="number" id="contractPercent" placeholder="Insertar monto a pagar cuando firme contrato Ejemplo: 10" />
+    <label>Inicial / Al firmar contrato (%):</label>
+    <select required id="contractPercent">
+      <option value="">Seleccionar porcentaje</option>
+      <option value="5">5%</option>
+      <option value="10">10%</option>
+      <option value="15">15%</option>
+      <option value="20">20%</option>
+      <option value="25">25%</option>
+      <option value="30">30%</option>
+      <option value="35">35%</option>
+      <option value="40">40%</option>
+      <option value="45">45%</option>
+      <option value="50">50%</option>
+
+    </select>
+
+    <label>Durante construccion (%):</label>
+    <select required id="installmentPercent">
+      <option value="">Seleccionar porcentaje</option>
+      <option value="5">5%</option>
+      <option value="10">10%</option>
+      <option value="15">15%</option>
+      <option value="20">20%</option>
+      <option value="25">25%</option>
+      <option value="30">30%</option>
+      <option value="35">35%</option>
+      <option value="40">40%</option>
+      <option value="45">45%</option>
+      <option value="50">50%</option>
+
+    </select>
 
     <label>Fecha De Inicio:</label>
     <input required type="date" id="startDate" />
@@ -106,28 +176,32 @@
       const total = parseFloat(document.getElementById('totalPrice').value);
       const down = parseFloat(document.getElementById('downPayment').value);
       const contractPercent = parseFloat(document.getElementById('contractPercent').value);
+      const installmentPercent = parseFloat(document.getElementById('installmentPercent').value);
       const turnkeyDate = new Date(document.getElementById('turnkeyDate').value);
       const startDate = new Date(document.getElementById('startDate').value);
+      const clientName = document.getElementById('clientName').value.trim();
 
-      if (!total || !down || !contractPercent || !turnkeyDate || !startDate) {
+      if (!total || !down || !contractPercent || !installmentPercent || !turnkeyDate || !startDate || !clientName) {
         alert('Porfavor completar todos los campos.');
         return;
       }
 
       const contractPayment = (total * contractPercent) / 100;
-      const balance = total - down - contractPayment;
+      const installmentAmount = (total * installmentPercent) / 100;
+      const amountDue = total - down - contractPayment - installmentAmount;
 
       // Calculate months between start and turnkey dates
       const months = (turnkeyDate.getFullYear() - startDate.getFullYear()) * 12 +
                      (turnkeyDate.getMonth() - startDate.getMonth());
-      const monthlyPayment = months > 0 ? balance / months : balance;
+      const monthlyPayment = months > 0 ? installmentAmount / months : installmentAmount;
 
       // Build results and table
       let html = `
         <h3>Resultados</h3>
-        <p><strong>Pago Al Firmar Contrato:</strong> $${contractPayment.toFixed(2)}</p>
-        <p><strong>Balance Restante:</strong> $${balance.toFixed(2)}</p>
-        <p><strong>Mensualidad</strong> $${monthlyPayment.toFixed(2)} (${months} Meses)</p>
+        <p><strong>Inicial / Al firmar contrato:</strong> $${contractPayment.toFixed(2)}</p>
+        <p><strong>Monto Total Para Cuotas:</strong> $${installmentAmount.toFixed(2)} (${installmentPercent}%)</p>
+        <p><strong>Mensualidad Durante construccion :</strong> $${monthlyPayment.toFixed(2)} (${months} Meses)</p>
+        <p><strong> Monto Restante:</strong> $${amountDue.toFixed(2)} (${((amountDue / total) * 100).toFixed(2)}%)</p>
         <h4>Plan De Pago</h4>
         <table id="scheduleTable">
           <tr><th>#</th><th>Fecha De Pago</th><th>Cantidad (USD)</th></tr>
@@ -151,32 +225,276 @@
     async function exportPDF() {
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF();
-      doc.text('Property Payment Schedule', 10, 10);
+      
+      // Get all the values
+      const clientName = document.getElementById('clientName').value.trim();
+      const total = parseFloat(document.getElementById('totalPrice').value);
+      const down = parseFloat(document.getElementById('downPayment').value);
+      const contractPercent = parseFloat(document.getElementById('contractPercent').value);
+      const installmentPercent = parseFloat(document.getElementById('installmentPercent').value);
+      const contractPayment = (total * contractPercent) / 100;
+      const installmentAmount = (total * installmentPercent) / 100;
+      const amountDue = total - down - contractPayment - installmentAmount;
+      const turnkeyDate = new Date(document.getElementById('turnkeyDate').value);
+      const startDate = new Date(document.getElementById('startDate').value);
+      
+      const months = (turnkeyDate.getFullYear() - startDate.getFullYear()) * 12 +
+                     (turnkeyDate.getMonth() - startDate.getMonth());
+      const monthlyPayment = months > 0 ? installmentAmount / months : installmentAmount;
 
-      const rows = [['#', 'Due Date', 'Amount (USD)']];
-      const table = document.querySelectorAll('#scheduleTable tr');
-      table.forEach((tr, index) => {
-        if (index > 0) {
-          const cells = tr.querySelectorAll('td');
-          rows.push([cells[0].innerText, cells[1].innerText, cells[2].innerText]);
+      // Set colors
+      const primaryColor = [0, 119, 255];
+      const darkGray = [51, 51, 51];
+      const lightGray = [128, 128, 128];
+      
+      // Title Section with background
+      doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+      doc.rect(0, 0, 210, 40, 'F');
+      
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(22);
+      doc.setFont(undefined, 'bold');
+      doc.text('PLAN DE PAGO', 105, 15, { align: 'center' });
+      
+      doc.setFontSize(12);
+      doc.setFont(undefined, 'normal');
+      doc.text('Cliente:', 105, 26, { align: 'center' });
+      
+      doc.setFontSize(16);
+      doc.setFont(undefined, 'bold');
+      doc.text(clientName, 105, 34, { align: 'center' });
+      
+      // Date
+      doc.setTextColor(darkGray[0], darkGray[1], darkGray[2]);
+      doc.setFontSize(10);
+      doc.text(`Fecha: ${new Date().toLocaleDateString('es-ES')}`, 15, 50);
+      
+      // Summary Section
+      let yPos = 65;
+      doc.setTextColor(darkGray[0], darkGray[1], darkGray[2]);
+      doc.setFontSize(14);
+      doc.setFont(undefined, 'bold');
+      doc.text('RESUMEN FINANCIERO', 15, yPos);
+      
+      // Summary box
+      yPos += 5;
+      doc.setDrawColor(200, 200, 200);
+      doc.setLineWidth(0.5);
+      doc.rect(15, yPos, 180, 65);
+      
+      // Summary details
+      yPos += 10;
+      doc.setFontSize(11);
+      doc.setFont(undefined, 'bold');
+      doc.text('Precio Total de la Propiedad:', 20, yPos);
+      doc.setFont(undefined, 'normal');
+      doc.text(`$${total.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})} USD`, 150, yPos, { align: 'right' });
+      
+      yPos += 10;
+      doc.setFont(undefined, 'bold');
+      doc.text('Monto de Reserva:', 20, yPos);
+      doc.setFont(undefined, 'normal');
+      doc.text(`$${down.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})} USD`, 150, yPos, { align: 'right' });
+      
+      yPos += 10;
+      doc.setFont(undefined, 'bold');
+      doc.text('Inicial / Al Firmar Contrato:', 20, yPos);
+      doc.setFont(undefined, 'normal');
+      doc.text(`$${contractPayment.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})} USD (${contractPercent}%)`, 150, yPos, { align: 'right' });
+      
+      yPos += 10;
+      doc.setFont(undefined, 'bold');
+      doc.text('Durante Construcción:', 20, yPos);
+      doc.setFont(undefined, 'normal');
+      doc.text(`$${installmentAmount.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})} USD (${installmentPercent}%)`, 150, yPos, { align: 'right' });
+      
+      yPos += 10;
+      doc.setFont(undefined, 'bold');
+      doc.text('Mensualidad:', 20, yPos);
+      doc.setFont(undefined, 'normal');
+      doc.text(`$${monthlyPayment.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})} USD (${months} meses)`, 150, yPos, { align: 'right' });
+      
+      yPos += 10;
+      doc.setFont(undefined, 'bold');
+      doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+      doc.text('Monto Restante (Entrega):', 20, yPos);
+      doc.setFont(undefined, 'bold');
+      doc.text(`$${amountDue.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})} USD (${((amountDue / total) * 100).toFixed(2)}%)`, 150, yPos, { align: 'right' });
+      
+      // Payment Schedule Section
+      yPos += 20;
+      doc.setTextColor(darkGray[0], darkGray[1], darkGray[2]);
+      doc.setFontSize(14);
+      doc.setFont(undefined, 'bold');
+      doc.text('CALENDARIO DE PAGOS', 15, yPos);
+      
+      // Table header
+      yPos += 8;
+      doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+      doc.rect(15, yPos, 180, 10, 'F');
+      
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(10);
+      doc.setFont(undefined, 'bold');
+      doc.text('#', 25, yPos + 7, { align: 'center' });
+      doc.text('Fecha de Pago', 85, yPos + 7, { align: 'center' });
+      doc.text('Cantidad (USD)', 155, yPos + 7, { align: 'center' });
+      
+      // Table rows
+      yPos += 10;
+      doc.setTextColor(darkGray[0], darkGray[1], darkGray[2]);
+      doc.setFont(undefined, 'normal');
+      
+      for (let i = 1; i <= months; i++) {
+        if (yPos > 270) {
+          doc.addPage();
+          yPos = 20;
         }
-      });
+        
+        const date = new Date(startDate);
+        date.setMonth(startDate.getMonth() + i);
+        
+        // Alternating row colors
+        if (i % 2 === 0) {
+          doc.setFillColor(245, 245, 245);
+          doc.rect(15, yPos, 180, 8, 'F');
+        }
+        
+        doc.setDrawColor(220, 220, 220);
+        doc.line(15, yPos + 8, 195, yPos + 8);
+        
+        doc.text(i.toString(), 25, yPos + 6, { align: 'center' });
+        doc.text(date.toLocaleDateString('es-ES'), 85, yPos + 6, { align: 'center' });
+        doc.text(`$${monthlyPayment.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`, 155, yPos + 6, { align: 'center' });
+        
+        yPos += 8;
+      }
+      
+      // Footer
+      const pageCount = doc.internal.getNumberOfPages();
+      for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        doc.setFontSize(8);
+        doc.setTextColor(lightGray[0], lightGray[1], lightGray[2]);
+        doc.text(`Página ${i} de ${pageCount}`, 105, 290, { align: 'center' });
+        doc.text('Este documento es un plan de pago estimado', 105, 285, { align: 'center' });
+      }
 
-      let y = 20;
-      rows.forEach(row => {
-        doc.text(row.join('  |  '), 10, y);
-        y += 8;
-      });
-
-      doc.save('payment_schedule.pdf');
+      doc.save('plan_de_pago.pdf');
     }
 
     function exportExcel() {
       const wb = XLSX.utils.book_new();
-      const table = document.getElementById('scheduleTable');
-      const ws = XLSX.utils.table_to_sheet(table);
-      XLSX.utils.book_append_sheet(wb, ws, 'Schedule');
-      XLSX.writeFile(wb, 'payment_schedule.xlsx');
+      
+      // Get all the values
+      const clientName = document.getElementById('clientName').value.trim();
+      const total = parseFloat(document.getElementById('totalPrice').value);
+      const down = parseFloat(document.getElementById('downPayment').value);
+      const contractPercent = parseFloat(document.getElementById('contractPercent').value);
+      const installmentPercent = parseFloat(document.getElementById('installmentPercent').value);
+      const contractPayment = (total * contractPercent) / 100;
+      const installmentAmount = (total * installmentPercent) / 100;
+      const amountDue = total - down - contractPayment - installmentAmount;
+      const turnkeyDate = new Date(document.getElementById('turnkeyDate').value);
+      const startDate = new Date(document.getElementById('startDate').value);
+      
+      const months = (turnkeyDate.getFullYear() - startDate.getFullYear()) * 12 +
+                     (turnkeyDate.getMonth() - startDate.getMonth());
+      const monthlyPayment = months > 0 ? installmentAmount / months : installmentAmount;
+      
+      // Create worksheet data
+      const data = [];
+      
+      // Header section
+      data.push(['PLAN DE PAGO']);
+      data.push(['Cliente:']);
+      data.push([clientName]);
+      data.push([`Fecha: ${new Date().toLocaleDateString('es-ES')}`]);
+      data.push([]);
+      
+      // Summary section
+      data.push(['RESUMEN FINANCIERO']);
+      data.push([]);
+      data.push(['Precio Total de la Propiedad:', `$${total.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})} USD`]);
+      data.push(['Monto de Reserva:', `$${down.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})} USD`]);
+      data.push(['Inicial / Al Firmar Contrato:', `$${contractPayment.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})} USD (${contractPercent}%)`]);
+      data.push(['Durante Construcción:', `$${installmentAmount.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})} USD (${installmentPercent}%)`]);
+      data.push(['Mensualidad:', `$${monthlyPayment.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})} USD (${months} meses)`]);
+      data.push(['Monto Restante (Entrega):', `$${amountDue.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})} USD (${((amountDue / total) * 100).toFixed(2)}%)`]);
+      data.push([]);
+      
+      // Payment schedule section
+      data.push(['CALENDARIO DE PAGOS']);
+      data.push([]);
+      data.push(['#', 'Fecha de Pago', 'Cantidad (USD)']);
+      
+      // Add payment rows
+      for (let i = 1; i <= months; i++) {
+        const date = new Date(startDate);
+        date.setMonth(startDate.getMonth() + i);
+        data.push([
+          i,
+          date.toLocaleDateString('es-ES'),
+          `$${monthlyPayment.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`
+        ]);
+      }
+      
+      // Create worksheet from data
+      const ws = XLSX.utils.aoa_to_sheet(data);
+      
+      // Set column widths
+      ws['!cols'] = [
+        { wch: 30 },  // Column A
+        { wch: 25 },  // Column B
+        { wch: 20 }   // Column C
+      ];
+      
+      // Merge cells for headers
+      if (!ws['!merges']) ws['!merges'] = [];
+      ws['!merges'].push(
+        { s: { r: 0, c: 0 }, e: { r: 0, c: 2 } }, // PLAN DE PAGO
+        { s: { r: 1, c: 0 }, e: { r: 1, c: 2 } }, // Nombre del Cliente:
+        { s: { r: 2, c: 0 }, e: { r: 2, c: 2 } }, // Client name
+        { s: { r: 5, c: 0 }, e: { r: 5, c: 2 } }, // RESUMEN FINANCIERO
+        { s: { r: 14, c: 0 }, e: { r: 14, c: 2 } }  // CALENDARIO DE PAGOS
+      );
+      
+      // Apply styles (note: styling support varies by Excel version)
+      // Title styles
+      if (ws['A1']) ws['A1'].s = {
+        font: { bold: true, sz: 18 },
+        alignment: { horizontal: 'center' }
+      };
+      if (ws['A2']) ws['A2'].s = {
+        font: { sz: 11 },
+        alignment: { horizontal: 'center' }
+      };
+      if (ws['A3']) ws['A3'].s = {
+        font: { bold: true, sz: 14 },
+        alignment: { horizontal: 'center' }
+      };
+      
+      // Section headers
+      if (ws['A6']) ws['A6'].s = {
+        font: { bold: true, sz: 12 }
+      };
+      if (ws['A15']) ws['A15'].s = {
+        font: { bold: true, sz: 12 }
+      };
+      
+      // Table header row
+      const headerRow = 17;
+      ['A', 'B', 'C'].forEach(col => {
+        const cell = col + headerRow;
+        if (ws[cell]) ws[cell].s = {
+          font: { bold: true, color: { rgb: 'FFFFFF' } },
+          fill: { fgColor: { rgb: '0077FF' } },
+          alignment: { horizontal: 'center' }
+        };
+      });
+      
+      XLSX.utils.book_append_sheet(wb, ws, 'Plan de Pago');
+      XLSX.writeFile(wb, `plan_de_pago_${clientName.replace(/\s+/g, '_')}.xlsx`);
     }
   </script>
 </body>
