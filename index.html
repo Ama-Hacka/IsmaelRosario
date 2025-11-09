@@ -125,33 +125,11 @@
     <label>Inicial / Al firmar contrato (%):</label>
     <select required id="contractPercent">
       <option value="">Seleccionar porcentaje</option>
-      <option value="5">5%</option>
-      <option value="10">10%</option>
-      <option value="15">15%</option>
-      <option value="20">20%</option>
-      <option value="25">25%</option>
-      <option value="30">30%</option>
-      <option value="35">35%</option>
-      <option value="40">40%</option>
-      <option value="45">45%</option>
-      <option value="50">50%</option>
-
     </select>
 
     <label>Durante construccion (%):</label>
     <select required id="installmentPercent">
       <option value="">Seleccionar porcentaje</option>
-      <option value="5">5%</option>
-      <option value="10">10%</option>
-      <option value="15">15%</option>
-      <option value="20">20%</option>
-      <option value="25">25%</option>
-      <option value="30">30%</option>
-      <option value="35">35%</option>
-      <option value="40">40%</option>
-      <option value="45">45%</option>
-      <option value="50">50%</option>
-
     </select>
 
     <label>Fecha De Inicio:</label>
@@ -166,10 +144,26 @@
   </div>
 
   <script>
-    // Set today's date as default start date
+    // Set today's date as default start date and populate percentage dropdowns
     document.addEventListener('DOMContentLoaded', () => {
       const today = new Date().toISOString().split('T')[0];
       document.getElementById('startDate').value = today;
+      
+      // Populate percentage dropdowns with 1-100%
+      const contractSelect = document.getElementById('contractPercent');
+      const installmentSelect = document.getElementById('installmentPercent');
+      
+      for (let i = 1; i <= 100; i++) {
+        const option1 = document.createElement('option');
+        option1.value = i;
+        option1.textContent = `${i}%`;
+        contractSelect.appendChild(option1);
+        
+        const option2 = document.createElement('option');
+        option2.value = i;
+        option2.textContent = `${i}%`;
+        installmentSelect.appendChild(option2);
+      }
     });
 
     function calculate() {
